@@ -21,23 +21,21 @@ textoffset = 0
 textoffset2 = 0
 pause='pause'
 #player setup
+
 score=0
 playerdir = [0, 0] # x movement, y movement
 oldplayerdir = None
 player = pygame.Rect((gridsizex*cellsize)//2, (gridsizey*cellsize)//2, cellsize,cellsize)
 playerlist = [player]
+add = False
+prevplayer = player
 # food setup
 
 food = pygame.Rect(randint(0, gridsizex)*cellsize, randint(0, gridsizey)*cellsize, cellsize,cellsize)
 # main loop
 
 def check_collision(rectlist, rect):
-    index = 0
-    for rectl in rectlist:
-        if rect.colliderect(rectl) == True and index > 0:
-            return True
-        else:
-            index+=1
+    return rect.collidelist(rectlist) > 0
     
 
 
@@ -78,20 +76,19 @@ while True:
 
             frame = 1
             #insert generic movement here
-            playerlist.pop(len(playerlist)-1)
-            
+            prevplayer = player
             player.x += playerdir[0]*cellsize
             player.y += playerdir[1]*cellsize
-
-            playerlist.append(player)
 
             if player.x == food.x and player.y == food.y:
                 while food.collidelist(playerlist) != -1:
                     food.x = randint(0, gridsizex-1)*cellsize
                     food.y = randint(0, gridsizey-1)*cellsize
-                    playerlist.append(player)
+                    playerlist.append(prevplayer)
                     score+=1
-                    print(len(playerlist))
+
+            playerlist.append(prevplayer)   
+            playerlist.pop(0)
 
             if check_collision(playerlist, playerlist[0]):
                 pause='dead'
