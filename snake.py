@@ -1,4 +1,5 @@
 #snake
+from random import randint
 import pygame, sys
 pygame.init()
 
@@ -10,7 +11,7 @@ screen = pygame.display.set_mode((gridsizex*cellsize, gridsizey*cellsize))
 black = (0, 0, 0) #black background
 white = (255,255,255) #white snake
 red = (255, 0, 0) # red food
-framereset = 5 # speed in frames
+framereset = 6 # speed in frames
 frame = 1 #resets when it reaches framereset
 clock = pygame.time.Clock()
 bigtext = pygame.font.Font('RobotoMono-Medium.ttf', 100) # adds font
@@ -24,9 +25,21 @@ score=0
 playerdir = [0, 0] # x movement, y movement
 oldplayerdir = None
 player = pygame.Rect((gridsizex*cellsize)//2, (gridsizey*cellsize)//2, cellsize,cellsize)
+playerlist = [player]
 # food setup
-food = pygame.Rect((gridsizex*cellsize)//2, (gridsizey*cellsize)//2, cellsize,cellsize)
+
+food = pygame.Rect(randint(0, gridsizex)*cellsize, randint(0, gridsizey)*cellsize, cellsize,cellsize)
 # main loop
+
+def check_collision(rectlist, rect):
+    index = 0
+    for rectl in rectlist:
+        if rect.colliderect(rectl) == True and index > 0:
+            return True
+        else:
+            index+=1
+    
+
 
 while True:
     for event in pygame.event.get():
@@ -49,19 +62,47 @@ while True:
                 playerdir = 0,0
                 textoffset = 0
                 textoffset2 = 0
+                playerlist = [player]
                 pause='unpause'
 
     if pause=='unpause':
         screen.fill(black)
         scoretext = 'score: %d' % score
         screen.blit(smalltext.render(scoretext, False, white), (0,0))
-        pygame.draw.rect(screen, white, player)
+
+        for playerrect in playerlist:
+            pygame.draw.rect(screen, white, playerrect)
+
+        pygame.draw.rect(screen, red, food)
         if frame % framereset == 0 or not playerdir == oldplayerdir:
+
             frame = 1
             #insert generic movement here
+            playerlist.pop(len(playerlist)-1)
+            
             player.x += playerdir[0]*cellsize
             player.y += playerdir[1]*cellsize
+
+            playerlist.append(player)
+
+            if player.x == food.x and player.y == food.y:
+                while food.collidelist(playerlist) != -1:
+                    food.x = randint(0, gridsizex-1)*cellsize
+                    food.y = randint(0, gridsizey-1)*cellsize
+                    playerlist.append(player)
+                    score+=1
+                    print(len(playerlist))
+
+            if check_collision(playerlist, playerlist[0]):
+                pause='dead'
+                
+
             oldplayerdir = playerdir
+        
+        
+
+
+                
 
     elif pause == 'pause':
         screen.fill(black)
@@ -70,7 +111,7 @@ while True:
         if not textoffset+150 > gridsizey*cellsize :
             textoffset += 1
     
-    if player.x > (gridsizex-1)*cellsize or player.y > (gridsizey-1)*cellsize or player.x < 0 or player.y < 0:
+    if player.x > (gridsizex-1)*cellsize or player.y > (gridsizey-1)*cellsize or player.x < 0 or player.y < 0 or pause=='dead':
         pause = 'dead'
         screen.fill(black)
         screen.blit(bigtext.render('You Died!',False, white), (7,7+textoffset2)) # draw text
